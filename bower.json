@@ -1,0 +1,16 @@
+{
+  "name": "professor-stats-mobile",
+  "description": "Apache cordova app",
+  "main": "index.js",
+  "authors": [
+    "Jacob Hafdahl <jacob.hafdahl@gmail.com>"
+  ],
+  "license": "ISC",
+  "homepage": "https://github.com/jakehafdahl/professor-stats-mobile",
+  "moduleType": [],
+  "private": true,
+  "dependencies": {
+    "react": "~0.14.0",
+    "requirejs": "~2.1.20"
+  }
+}
