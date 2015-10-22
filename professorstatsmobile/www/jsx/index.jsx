@@ -16,59 +16,78 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-'use strict';
-
 requirejs.config({
-    paths: {
-        'react': 'lib/react/react',
+    paths:{
+        'react': 'lib/react/react.min',
         'react-dom': 'lib/react/react-dom.min',
         'rsvp': 'lib/rsvp.js/rsvp',
-        'route-recognizer': 'lib/route-recognizer/dist/route-recognizer'
+        'route-recognizer': 'lib/route-recognizer/dist/route-recognizer',
+        'bootstrap': 'lib/bootstrap/dist/js/bootstrap.min',
+        'jquery': 'lib/jquery/dist/jquery.min'
     }
 });
 
-requirejs(['react', 'react-dom', 'rsvp', 'route-recognizer', 'router'], function (React, ReactDOM, rsvp, routerecognizer, router) {
-
-    var Main = React.createClass({
-        displayName: 'Main',
-
-        render: function render() {
-            return React.createElement(
-                'div',
-                null,
-                'Hello ',
-                this.props.name
-            );
+ requirejs(['react', 'react-dom', 'rsvp', 'route-recognizer','router', 'jquery', 'bootstrap'], function(React, ReactDOM, rsvp, routerecognizer, router, jquery, bootstrap){
+    var Player = React.createClass({
+        render: function(){
+            return <div className="row">{this.props.name}</div>
         }
     });
 
-    ReactDOM.render(React.createElement(Main, { name: "World" }), document.getElementById('root'));
+    var PlayerList = React.createClass({
+        getInitialState: function(){
+            return{
+                players: ["Adrian Peterson", "Marshawn Lynch", "Jamaal Charles"]
+            };
+        },
+        render: function(){
+            var players = this.state.players.map(function(name){return <Player name={name} />;});
+            return <div>
+                    {players}
+                    </div>;
+        }
+    });
+
+    var Main = React.createClass({
+        getInitialState: function(){
+            return {name: "World"};
+        },
+        render: function() {
+            return (<div className="panel panel-default">
+                    Hello {this.state.name}
+                    <PlayerList />
+                </div>);
+        }
+    });
+     
+    ReactDOM.render(<Main />, document.getElementById('root'));
 
     var app = {
         // Application Constructor
-        initialize: function initialize() {
+        initialize: function() {
             this.bindEvents();
         },
         // Bind Event Listeners
         //
         // Bind any events that are required on startup. Common events are:
         // 'load', 'deviceready', 'offline', and 'online'.
-        bindEvents: function bindEvents() {
+        bindEvents: function() {
             document.addEventListener('deviceready', this.onDeviceReady, false);
         },
         // deviceready Event Handler
         //
         // The scope of 'this' is the event. In order to call the 'receivedEvent'
         // function, we must explicitly call 'app.receivedEvent(...);'
-        onDeviceReady: function onDeviceReady() {
+        onDeviceReady: function() {
             app.receivedEvent('deviceready');
         },
         // Update DOM on a Received Event
-        receivedEvent: function receivedEvent(id) {
+        receivedEvent: function(id) {
 
             console.log('Received Event: ' + id);
         }
     };
 
     app.initialize();
+
 });

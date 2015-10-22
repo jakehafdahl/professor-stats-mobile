@@ -16,77 +16,96 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+'use strict';
+
 requirejs.config({
-    paths:{
+    paths: {
         'react': 'lib/react/react.min',
-        'react-dom': 'lib/react/react-dom.min'
+        'react-dom': 'lib/react/react-dom.min',
+        'rsvp': 'lib/rsvp.js/rsvp',
+        'route-recognizer': 'lib/route-recognizer/dist/route-recognizer',
+        'bootstrap': 'lib/bootstrap/dist/js/bootstrap.min',
+        'jquery': 'lib/jquery/dist/jquery.min'
     }
 });
 
- requirejs(['react', 'react-dom'], function(React, ReactDOM){
+requirejs(['react', 'react-dom', 'rsvp', 'route-recognizer', 'router', 'jquery', 'bootstrap'], function (React, ReactDOM, rsvp, routerecognizer, router, jquery, bootstrap) {
+    var Player = React.createClass({
+        displayName: 'Player',
 
-    var data = {
-        name: "World"
-    };
+        render: function render() {
+            return React.createElement(
+                'div',
+                { className: 'row' },
+                this.props.name
+            );
+        }
+    });
 
-    console.log("React is " + React);
-    var Input = React.createClass({displayName: 'Place',
-        render: function() {
-            return React.DOM.input({ 
-                type: 'text',
-                placeholder: 'some placeholder',
-                value:this.props.name.name
+    var PlayerList = React.createClass({
+        displayName: 'PlayerList',
+
+        getInitialState: function getInitialState() {
+            return {
+                players: ["Adrian Peterson", "Marshawn Lynch", "Jamaal Charles"]
+            };
+        },
+        render: function render() {
+            var players = this.state.players.map(function (name) {
+                return React.createElement(Player, { name: name });
             });
+            return React.createElement(
+                'div',
+                null,
+                players
+            );
         }
     });
 
-    var Hello = React.createClass({displayName: 'Hello',
-        render: function() {
-            return React.createElement("div", null, "Hello ", this.props.name.name);
+    var Main = React.createClass({
+        displayName: 'Main',
+
+        getInitialState: function getInitialState() {
+            return { name: "World" };
+        },
+        render: function render() {
+            return React.createElement(
+                'div',
+                { className: 'panel panel-default' },
+                'Hello ',
+                this.state.name,
+                React.createElement(PlayerList, null)
+            );
         }
     });
-     
-    ReactDOM.render(
-        React.createElement(Hello, {name: data}),
-        document.getElementById('container')
-    );
-    ReactDOM.render(
-        React.createElement(Input, {name: data}),
-        document.getElementById('container2')
-    );
+
+    ReactDOM.render(React.createElement(Main, null), document.getElementById('root'));
 
     var app = {
         // Application Constructor
-        initialize: function() {
+        initialize: function initialize() {
             this.bindEvents();
         },
         // Bind Event Listeners
         //
         // Bind any events that are required on startup. Common events are:
         // 'load', 'deviceready', 'offline', and 'online'.
-        bindEvents: function() {
+        bindEvents: function bindEvents() {
             document.addEventListener('deviceready', this.onDeviceReady, false);
         },
         // deviceready Event Handler
         //
         // The scope of 'this' is the event. In order to call the 'receivedEvent'
         // function, we must explicitly call 'app.receivedEvent(...);'
-        onDeviceReady: function() {
+        onDeviceReady: function onDeviceReady() {
             app.receivedEvent('deviceready');
         },
         // Update DOM on a Received Event
-        receivedEvent: function(id) {
-            var parentElement = document.getElementById(id);
-            var listeningElement = parentElement.querySelector('.listening');
-            var receivedElement = parentElement.querySelector('.received');
-
-            listeningElement.setAttribute('style', 'display:none;');
-            receivedElement.setAttribute('style', 'display:block;');
+        receivedEvent: function receivedEvent(id) {
 
             console.log('Received Event: ' + id);
         }
     };
 
     app.initialize();
-
 });
