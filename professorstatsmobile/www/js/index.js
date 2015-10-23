@@ -37,6 +37,18 @@ var playerList = [{
     name: "Antonio Brown",
     position: "WR",
     id: "ANTO"
+}, {
+    name: "John Brown",
+    position: "WR",
+    id: "JBROW"
+}, {
+    name: "Jim Brown",
+    position: "RB",
+    id: "BROW"
+}, {
+    name: "Phil Mickelson",
+    position: "WR",
+    id: "DFSA"
 }];
 
 function getPlayerById(id) {
@@ -50,17 +62,17 @@ var Player = React.createClass({
 
     render: function render() {
         return React.createElement(
-            'div',
-            { className: 'panel panel-default' },
+            Link,
+            { to: '/player/' + this.props.player.id },
             React.createElement(
                 'div',
-                { className: 'panel-heading', role: 'tab', id: 'headingOne' },
+                { className: 'panel panel-default' },
                 React.createElement(
-                    'h4',
-                    { className: 'panel-title' },
+                    'div',
+                    { className: 'panel-heading', role: 'tab', id: 'headingOne' },
                     React.createElement(
-                        Link,
-                        { to: '/player/' + this.props.player.id },
+                        'h4',
+                        { className: 'panel-title' },
                         this.props.player.name
                     )
                 )
@@ -78,16 +90,25 @@ var PlayerPage = React.createClass({
     render: function render() {
         return React.createElement(
             'div',
-            { className: 'row' },
+            null,
+            React.createElement(NavBar, null),
             React.createElement(
-                'h1',
-                null,
-                this.state.player.name
-            ),
-            React.createElement(
-                'h3',
-                null,
-                this.state.player.position
+                'div',
+                { className: 'container-fluid' },
+                React.createElement(
+                    'div',
+                    { className: 'row' },
+                    React.createElement(
+                        'h1',
+                        null,
+                        this.state.player.name
+                    ),
+                    React.createElement(
+                        'h3',
+                        null,
+                        this.state.player.position
+                    )
+                )
             )
         );
     }
@@ -96,17 +117,56 @@ var PlayerPage = React.createClass({
 var PlayerList = React.createClass({
     displayName: 'PlayerList',
 
+    filterPositionUpdated: function filterPositionUpdated(e) {
+        this.props.filterPositionUpdated(this.refs.filterPosition.value);
+    },
+    searchTextUpdated: function searchTextUpdated(e) {
+        this.props.updateFilterFromSearch(this.refs.filterSearch.value);
+    },
     render: function render() {
         var players = this.props.players.map(function (player) {
-            return React.createElement(Player, { player: player });
+            return React.createElement(Player, { key: player.id, player: player });
         });
         return React.createElement(
             'div',
             { className: 'row' },
             React.createElement(
-                'h2',
-                null,
-                'Players'
+                'div',
+                { className: 'col-sm-6' },
+                React.createElement('input', { type: 'text', className: 'form-control', placeholder: 'Search by name', ref: 'filterSearch', onChange: this.searchTextUpdated })
+            ),
+            React.createElement(
+                'div',
+                { className: 'col-sm-6' },
+                React.createElement(
+                    'select',
+                    { className: 'form-control', ref: 'filterPosition', onChange: this.filterPositionUpdated },
+                    React.createElement(
+                        'option',
+                        { value: '' },
+                        'All'
+                    ),
+                    React.createElement(
+                        'option',
+                        { value: 'QB' },
+                        'Quarterback'
+                    ),
+                    React.createElement(
+                        'option',
+                        { value: 'RB' },
+                        'Runningback'
+                    ),
+                    React.createElement(
+                        'option',
+                        { value: 'WR' },
+                        'Wide Reciever'
+                    ),
+                    React.createElement(
+                        'option',
+                        { value: 'TE' },
+                        'Tight End'
+                    )
+                )
             ),
             React.createElement(
                 'div',
@@ -120,17 +180,27 @@ var PlayerList = React.createClass({
 var NavBar = React.createClass({
     displayName: 'NavBar',
 
-    searchTextUpdated: function searchTextUpdated(e) {
-        this.props.updateFilterFromSearch(this.refs.filterSearchText.value);
+    mixins: [BrowserHistory],
+    goBack: function goBack(e) {
+        if (Router.History.length > 1) {
+            // this will take you back if there is history
+            Router.History.back();
+        } else {
+            // this will take you to the parent route if there is no history,
+            // but unfortunately also add it as a new route
+            var currentRoutes = this.context.router.getCurrentRoutes();
+            var routeName = currentRoutes[currentRoutes.length - 2].name;
+            this.context.router.transitionTo(routeName);
+        }
     },
     render: function render() {
         return React.createElement(
             _reactBootstrap.Navbar,
-            { toggleNavKey: 0 },
+            { fixedTop: true, inverse: true, toggleNavKey: 0 },
             React.createElement(
                 _reactBootstrap.NavBrand,
                 null,
-                'professorStats'
+                React.createElement(_reactBootstrap.Glyphicon, { glyph: 'chevron-left', onClick: this.goBack })
             ),
             React.createElement(
                 _reactBootstrap.CollapsibleNav,
@@ -149,15 +219,6 @@ var NavBar = React.createClass({
                         { eventKey: 2, href: '#' },
                         'Link Right'
                     )
-                ),
-                React.createElement(
-                    _reactBootstrap.Nav,
-                    { navbar: true, left: true },
-                    React.createElement(
-                        _reactBootstrap.NavItem,
-                        null,
-                        React.createElement('input', { type: 'text', className: 'input', placeholder: 'Search by name', ref: 'filterSearchText', onChange: this.searchTextUpdated })
-                    )
                 )
             )
         );
@@ -174,8 +235,17 @@ var Main = React.createClass({
         };
     },
     updateFilterFromSearch: function updateFilterFromSearch(value) {
-        var players = value == "" ? this.state.originalPlayerList : this.state.players.filter(function (player) {
-            return player.name.indexOf(value) >= 0;
+        var players = value == "" ? this.state.originalPlayerList : this.state.originalPlayerList.filter(function (player) {
+            return player.name.toLowerCase().indexOf(value.toLowerCase()) >= 0;
+        });
+        this.setState({
+            originalPlayerList: this.state.originalPlayerList,
+            players: players
+        });
+    },
+    filterPositionUpdated: function filterPositionUpdated(value) {
+        var players = value == "" ? this.state.originalPlayerList : this.state.originalPlayerList.filter(function (player) {
+            return player.position.indexOf(value) >= 0;
         });
         this.setState({
             originalPlayerList: this.state.originalPlayerList,
@@ -185,9 +255,9 @@ var Main = React.createClass({
     render: function render() {
         return React.createElement(
             'div',
-            { className: 'container-fluid' },
-            React.createElement(NavBar, { updateFilterFromSearch: this.updateFilterFromSearch }),
-            React.createElement(PlayerList, { players: this.state.players })
+            null,
+            React.createElement(NavBar, null),
+            React.createElement(PlayerList, { players: this.state.players, updateFilterFromSearch: this.updateFilterFromSearch, filterPositionUpdated: this.filterPositionUpdated })
         );
     }
 });

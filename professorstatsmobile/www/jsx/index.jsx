@@ -4,7 +4,7 @@ var Router = require('react-router').Router
 var Route = require('react-router').Route
 var Link = require('react-router').Link
 var BrowserHistory = require('react-router').BrowserHistory;
-import { Navbar, NavBrand, Nav, NavItem, NavDropdown, MenuItem, CollapsibleNav } from 'react-bootstrap'
+import { Navbar, NavBrand, Nav, NavItem, NavDropdown, MenuItem, CollapsibleNav, Button, Glyphicon } from 'react-bootstrap'
 
 var playerList = [
     {
@@ -41,6 +41,21 @@ var playerList = [
         name: "Antonio Brown",
         position: "WR",
         id: "ANTO"
+    },
+    {
+        name: "John Brown",
+        position: "WR",
+        id: "JBROW"
+    },
+    {
+        name: "Jim Brown",
+        position: "RB",
+        id: "BROW"
+    },
+    {
+        name: "Phil Mickelson",
+        position: "WR",
+        id: "DFSA"
     }];
 
     function getPlayerById(id){
@@ -49,13 +64,14 @@ var playerList = [
 
     var Player = React.createClass({
         render: function(){
-            return <div className="panel panel-default">
+            return <Link to={`/player/${this.props.player.id}`}><div className="panel panel-default">
                     <div className="panel-heading" role="tab" id="headingOne">
                       <h4 className="panel-title">
-                          <Link to={`/player/${this.props.player.id}`}>{this.props.player.name}</Link>
+                          {this.props.player.name}
                       </h4>
                     </div>
-                    </div>;
+                    </div>
+                    </Link>;
         }
     });
 
@@ -64,42 +80,61 @@ var playerList = [
             return {player: getPlayerById(this.props.params.id)};
         },
         render: function(){
-            return <div className="row">
-                <h1>{this.state.player.name}</h1>
-                <h3>{this.state.player.position}</h3>
-            </div>
-        }
-    });
-
-    var PlayerList = React.createClass({
-        render: function(){
-            var players = this.props.players.map(function(player){return <Player player={player} />;});
-            return <div className="row">
-                    <h2>Players</h2>
-                    <div className="panel-group col-sm-12" id="accordion" role="tablist" aria-multiselectable="true">
-                    {players}
-                    </div>
+            return <div>
+                        <NavBar />
+                        <div className="container-fluid">
+                            <div className="row">
+                                <h1>{this.state.player.name}</h1>
+                                <h3>{this.state.player.position}</h3>
+                            </div>
+                        </div>
                     </div>;
         }
     });
 
-    var NavBar = React.createClass({
+    var PlayerList = React.createClass({
+        filterPositionUpdated: function(e){
+            this.props.filterPositionUpdated(this.refs.filterPosition.value);
+        },
         searchTextUpdated: function(e){
-            this.props.updateFilterFromSearch(this.refs.filterSearchText.value);
+            this.props.updateFilterFromSearch(this.refs.filterSearch.value);
+        },
+        render: function(){
+            var players = this.props.players.map(function(player){return <Player key={player.id} player={player} />;});
+            return      <div className="row">
+                            <div className="col-sm-6">
+                                <input type="text" className="form-control" placeholder="Search by name" ref="filterSearch" onChange={this.searchTextUpdated} />
+                            </div>
+                            <div className="col-sm-6">
+                                <select className="form-control"  ref="filterPosition" onChange={this.filterPositionUpdated}>
+                                    <option value="">All</option>
+                                    <option value="QB">Quarterback</option>
+                                    <option value="RB">Runningback</option>
+                                    <option value="WR">Wide Reciever</option>
+                                    <option value="TE">Tight End</option>
+                                </select>
+                            </div>
+                            <div className="panel-group col-sm-12" id="accordion" role="tablist" aria-multiselectable="true">
+                            {players}
+                            </div>
+                        </div>;
+        }
+    });
+
+    var NavBar = React.createClass({
+        mixins: [BrowserHistory],
+        goBack: function(e){
+            // how do you do this generically?
         },
         render: function(){
             return (
-                    <Navbar toggleNavKey={0}>
-                        <NavBrand>professorStats</NavBrand>
+                    <Navbar fixedTop inverse toggleNavKey={0}>
+                        <NavBrand><Glyphicon glyph="chevron-left" onClick={this.goBack}/>
+                        </NavBrand>
                         <CollapsibleNav eventKey={0}> {/* This is the eventKey referenced */}
                           <Nav navbar right>
                             <NavItem eventKey={1} href="#">Link Right</NavItem>
                             <NavItem eventKey={2} href="#">Link Right</NavItem>
-                          </Nav>
-                          <Nav navbar left>
-                            <NavItem>
-                                <input type="text" className="input" placeholder="Search by name" ref="filterSearchText" onChange={this.searchTextUpdated} />
-                            </NavItem>
                           </Nav>
                         </CollapsibleNav>
                     </Navbar>
@@ -115,7 +150,16 @@ var playerList = [
             };
         },
         updateFilterFromSearch: function(value){
-            var players = value == "" ? this.state.originalPlayerList : this.state.players.filter(function(player){return player.name.toLowerCase().indexOf(value.toLowerCase()) >= 0;});
+            var players = value == "" ? this.state.originalPlayerList : this.state.originalPlayerList.filter(function(player){return player.name.toLowerCase().indexOf(value.toLowerCase()) >= 0;});
+            this.setState(
+                {
+                    originalPlayerList: this.state.originalPlayerList,
+                    players: players
+                }
+            );
+        },
+        filterPositionUpdated: function(value){
+            var players = value == "" ? this.state.originalPlayerList : this.state.originalPlayerList.filter(function(player){return player.position.indexOf(value) >= 0 ;});
             this.setState(
                 {
                     originalPlayerList: this.state.originalPlayerList,
@@ -124,9 +168,9 @@ var playerList = [
             );
         },
         render: function() {
-            return (<div className="container-fluid">
-                        <NavBar updateFilterFromSearch={this.updateFilterFromSearch} />
-                        <PlayerList players={this.state.players} />
+            return (<div>
+                        <NavBar />
+                        <PlayerList players={this.state.players} updateFilterFromSearch={this.updateFilterFromSearch} filterPositionUpdated={this.filterPositionUpdated} />
                     </div>);
         }
     });

@@ -72,16 +72,31 @@ var playerList = [
     });
 
     var PlayerList = React.createClass({
-        getInitialState: function(){
-            return{
-                players: playerList
-            };
+        filterPositionUpdated: function(e){
+            this.props.filterPositionUpdated(this.refs.filterPosition.value);
+        },
+        searchTextUpdated: function(e){
+            this.props.updateFilterFromSearch(this.refs.filterSearch.value);
         },
         render: function(){
-            var players = this.state.players.map(function(player){return <Player player={player} />;});
+            var players = this.props.players.map(function(player){return <Player player={player} />;});
             return <div className="row">
-                    <h2>Players</h2>
-                    <div className="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
+                    <div className="col-sm-3">
+                        <h2>Players</h2>
+                    </div>
+                    <div className="col-sm-4">
+                        <input type="text" className="form-control" placeholder="Search by name" ref="filterSearch" onChange={this.searchTextUpdated} />
+                    </div>
+                    <div className="col-sm-4">
+                        <select className="form-control"  ref="filterPosition" onChange={this.filterPositionUpdated}>
+                            <option value="">All</option>
+                            <option value="QB">Quarterback</option>
+                            <option value="RB">Runningback</option>
+                            <option value="WR">Wide Reciever</option>
+                            <option value="TE">Tight End</option>
+                        </select>
+                    </div>
+                    <div className="panel-group col-sm-12" id="accordion" role="tablist" aria-multiselectable="true">
                     {players}
                     </div>
                     </div>;
@@ -94,17 +109,6 @@ var playerList = [
                     <Navbar toggleNavKey={0}>
                         <NavBrand>professorStats</NavBrand>
                         <CollapsibleNav eventKey={0}> {/* This is the eventKey referenced */}
-                          <Nav navbar>
-                            <NavItem eventKey={1} href="#">Link</NavItem>
-                            <NavItem eventKey={2} href="#">Link</NavItem>
-                            <NavDropdown eventKey={3} title="Dropdown" id="collapsible-nav-dropdown">
-                              <MenuItem eventKey="1">Action</MenuItem>
-                              <MenuItem eventKey="2">Another action</MenuItem>
-                              <MenuItem eventKey="3">Something else here</MenuItem>
-                              <MenuItem divider />
-                              <MenuItem eventKey="4">Separated link</MenuItem>
-                            </NavDropdown>
-                          </Nav>
                           <Nav navbar right>
                             <NavItem eventKey={1} href="#">Link Right</NavItem>
                             <NavItem eventKey={2} href="#">Link Right</NavItem>
@@ -116,8 +120,35 @@ var playerList = [
     });
 
     var Main = React.createClass({
+        getInitialState: function(){
+            return{
+                originalPlayerList: playerList,
+                players: playerList
+            };
+        },
+        updateFilterFromSearch: function(value){
+            var players = value == "" ? this.state.originalPlayerList : this.state.originalPlayerList.filter(function(player){return player.name.toLowerCase().indexOf(value.toLowerCase()) >= 0;});
+            this.setState(
+                {
+                    originalPlayerList: this.state.originalPlayerList,
+                    players: players
+                }
+            );
+        },
+        filterPositionUpdated: function(value){
+            var players = value == "" ? this.state.originalPlayerList : this.state.originalPlayerList.filter(function(player){return player.position.indexOf(value) >= 0 ;});
+            this.setState(
+                {
+                    originalPlayerList: this.state.originalPlayerList,
+                    players: players
+                }
+            );
+        },
         render: function() {
-            return (<div><NavBar /><PlayerList /></div>);
+            return (<div className="container-fluid">
+                        <NavBar />
+                        <PlayerList players={this.state.players} updateFilterFromSearch={this.updateFilterFromSearch} filterPositionUpdated={this.filterPositionUpdated} />
+                    </div>);
         }
     });
      
