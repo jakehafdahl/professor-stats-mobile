@@ -2,7 +2,39 @@
 
 var React = require('react');
 var ReactDOM = require('react-dom');
-var Router = require('react-router');
+var Router = require('react-router').Router;
+var Route = require('react-router').Route;
+var Link = require('react-router').Link;
+
+var playerList = [{
+    name: "Adrian Peterson",
+    position: "RB",
+    id: "ADRP"
+}, {
+    name: "Marshawn Lynch",
+    position: "RB",
+    id: "MRSH"
+}, {
+    name: "Jamaal Charles",
+    position: "RB",
+    id: "JMCH"
+}, {
+    name: "Aaron Rodgers",
+    position: "QB",
+    id: "AARN"
+}, {
+    name: "Andrew Luck",
+    position: "QB",
+    id: "ALUC"
+}, {
+    name: "Calvin Johnson",
+    position: "WR",
+    id: "CALJ"
+}, {
+    name: "Antonio Brown",
+    position: "WR",
+    id: "ANTO"
+}];
 
 var Player = React.createClass({
     displayName: 'Player',
@@ -18,11 +50,27 @@ var Player = React.createClass({
                     'h4',
                     { className: 'panel-title' },
                     React.createElement(
-                        'a',
-                        { role: 'button', 'data-toggle': 'collapse', 'data-parent': '#accordion', href: '#{this.props.name}', 'aria-expanded': 'true', 'aria-controls': this.props.name },
-                        this.props.name
+                        Link,
+                        { to: '/player/' + this.props.player.name },
+                        this.props.player.name
                     )
                 )
+            )
+        );
+    }
+});
+
+var PlayerPage = React.createClass({
+    displayName: 'PlayerPage',
+
+    render: function render() {
+        return React.createElement(
+            'div',
+            { className: 'row' },
+            React.createElement(
+                'h1',
+                null,
+                this.props.params.name
             )
         );
     }
@@ -33,12 +81,12 @@ var PlayerList = React.createClass({
 
     getInitialState: function getInitialState() {
         return {
-            players: ["Adrian Peterson", "Marshawn Lynch", "Jamaal Charles", "Aaron Rodgers", "Andrew Luck", "Calvin Johnson", "Antonio Brown"]
+            players: playerList
         };
     },
     render: function render() {
-        var players = this.state.players.map(function (name) {
-            return React.createElement(Player, { name: name });
+        var players = this.state.players.map(function (player) {
+            return React.createElement(Player, { player: player });
         });
         return React.createElement(
             'div',
@@ -73,8 +121,6 @@ var Main = React.createClass({
     }
 });
 
-ReactDOM.render(React.createElement(Main, null), document.getElementById('root'));
-
 var app = {
     // Application Constructor
     initialize: function initialize() {
@@ -102,3 +148,10 @@ var app = {
 };
 
 app.initialize();
+
+ReactDOM.render(React.createElement(
+    Router,
+    null,
+    React.createElement(Route, { path: '/', component: Main }),
+    React.createElement(Route, { path: '/player/:name', component: PlayerPage })
+), document.getElementById('root'));
