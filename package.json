@@ -17,6 +17,10 @@
   },
   "homepage": "https://github.com/jakehafdahl/professor-stats-mobile#readme",
   "dependencies": {
-    "bower": "^1.6.3"
+    "bower": "^1.6.3",
+    "history": "^1.12.5",
+    "jquery": "^2.1.4",
+    "react": "^0.14.0",
+    "react-dom": "^0.14.0"
   }
 }
