@@ -1,8 +1,49 @@
 'use strict';
 
+var _reactBootstrap = require('react-bootstrap');
+
 var React = require('react');
 var ReactDOM = require('react-dom');
-var Router = require('react-router');
+var Router = require('react-router').Router;
+var Route = require('react-router').Route;
+var Link = require('react-router').Link;
+var BrowserHistory = require('react-router').BrowserHistory;
+
+var playerList = [{
+    name: "Adrian Peterson",
+    position: "RB",
+    id: "ADRP"
+}, {
+    name: "Marshawn Lynch",
+    position: "RB",
+    id: "MRSH"
+}, {
+    name: "Jamaal Charles",
+    position: "RB",
+    id: "JMCH"
+}, {
+    name: "Aaron Rodgers",
+    position: "QB",
+    id: "AARN"
+}, {
+    name: "Andrew Luck",
+    position: "QB",
+    id: "ALUC"
+}, {
+    name: "Calvin Johnson",
+    position: "WR",
+    id: "CALJ"
+}, {
+    name: "Antonio Brown",
+    position: "WR",
+    id: "ANTO"
+}];
+
+function getPlayerById(id) {
+    return playerList.filter(function (player) {
+        return player.id === id;
+    })[0];
+};
 
 var Player = React.createClass({
     displayName: 'Player',
@@ -18,11 +59,35 @@ var Player = React.createClass({
                     'h4',
                     { className: 'panel-title' },
                     React.createElement(
-                        'a',
-                        { role: 'button', 'data-toggle': 'collapse', 'data-parent': '#accordion', href: '#{this.props.name}', 'aria-expanded': 'true', 'aria-controls': this.props.name },
-                        this.props.name
+                        Link,
+                        { to: '/player/' + this.props.player.id },
+                        this.props.player.name
                     )
                 )
+            )
+        );
+    }
+});
+
+var PlayerPage = React.createClass({
+    displayName: 'PlayerPage',
+
+    getInitialState: function getInitialState() {
+        return { player: getPlayerById(this.props.params.id) };
+    },
+    render: function render() {
+        return React.createElement(
+            'div',
+            { className: 'row' },
+            React.createElement(
+                'h1',
+                null,
+                this.state.player.name
+            ),
+            React.createElement(
+                'h3',
+                null,
+                this.state.player.position
             )
         );
     }
@@ -33,29 +98,100 @@ var PlayerList = React.createClass({
 
     getInitialState: function getInitialState() {
         return {
-            players: ["Adrian Peterson", "Marshawn Lynch", "Jamaal Charles", "Aaron Rodgers", "Andrew Luck", "Calvin Johnson", "Antonio Brown"]
+            players: playerList
         };
     },
     render: function render() {
-        var players = this.state.players.map(function (name) {
-            return React.createElement(Player, { name: name });
+        var players = this.state.players.map(function (player) {
+            return React.createElement(Player, { player: player });
         });
         return React.createElement(
             'div',
-            { className: 'panel-group', id: 'accordion', role: 'tablist', 'aria-multiselectable': 'true' },
-            players
+            { className: 'row' },
+            React.createElement(
+                'h2',
+                null,
+                'Players'
+            ),
+            React.createElement(
+                'div',
+                { className: 'panel-group', id: 'accordion', role: 'tablist', 'aria-multiselectable': 'true' },
+                players
+            )
         );
     }
 });
 
-var Header = React.createClass({
-    displayName: 'Header',
+var NavBar = React.createClass({
+    displayName: 'NavBar',
 
     render: function render() {
         return React.createElement(
-            'div',
-            { className: 'row' },
-            'Players'
+            _reactBootstrap.Navbar,
+            { toggleNavKey: 0 },
+            React.createElement(
+                _reactBootstrap.NavBrand,
+                null,
+                'professorStats'
+            ),
+            React.createElement(
+                _reactBootstrap.CollapsibleNav,
+                { eventKey: 0 },
+                ' ',
+                React.createElement(
+                    _reactBootstrap.Nav,
+                    { navbar: true },
+                    React.createElement(
+                        _reactBootstrap.NavItem,
+                        { eventKey: 1, href: '#' },
+                        'Link'
+                    ),
+                    React.createElement(
+                        _reactBootstrap.NavItem,
+                        { eventKey: 2, href: '#' },
+                        'Link'
+                    ),
+                    React.createElement(
+                        _reactBootstrap.NavDropdown,
+                        { eventKey: 3, title: 'Dropdown', id: 'collapsible-nav-dropdown' },
+                        React.createElement(
+                            _reactBootstrap.MenuItem,
+                            { eventKey: '1' },
+                            'Action'
+                        ),
+                        React.createElement(
+                            _reactBootstrap.MenuItem,
+                            { eventKey: '2' },
+                            'Another action'
+                        ),
+                        React.createElement(
+                            _reactBootstrap.MenuItem,
+                            { eventKey: '3' },
+                            'Something else here'
+                        ),
+                        React.createElement(_reactBootstrap.MenuItem, { divider: true }),
+                        React.createElement(
+                            _reactBootstrap.MenuItem,
+                            { eventKey: '4' },
+                            'Separated link'
+                        )
+                    )
+                ),
+                React.createElement(
+                    _reactBootstrap.Nav,
+                    { navbar: true, right: true },
+                    React.createElement(
+                        _reactBootstrap.NavItem,
+                        { eventKey: 1, href: '#' },
+                        'Link Right'
+                    ),
+                    React.createElement(
+                        _reactBootstrap.NavItem,
+                        { eventKey: 2, href: '#' },
+                        'Link Right'
+                    )
+                )
+            )
         );
     }
 });
@@ -67,13 +203,11 @@ var Main = React.createClass({
         return React.createElement(
             'div',
             null,
-            React.createElement(Header, null),
+            React.createElement(NavBar, null),
             React.createElement(PlayerList, null)
         );
     }
 });
-
-ReactDOM.render(React.createElement(Main, null), document.getElementById('root'));
 
 var app = {
     // Application Constructor
@@ -102,3 +236,11 @@ var app = {
 };
 
 app.initialize();
+
+ReactDOM.render(React.createElement(
+    Router,
+    { history: BrowserHistory },
+    React.createElement(Route, { path: '/', component: Main }),
+    React.createElement(Route, { path: '/player/:id', component: PlayerPage })
+), document.getElementById('root'));
+/* This is the eventKey referenced */
