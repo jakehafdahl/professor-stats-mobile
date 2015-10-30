@@ -1,73 +1,175 @@
 var React = require('react');
 var ReactDOM = require('react-dom');
-var Router = require('react-router').Router
-var Route = require('react-router').Route
-var Link = require('react-router').Link
-var BrowserHistory = require('react-router').BrowserHistory;
-import { Navbar, NavBrand, Nav, NavItem, NavDropdown, MenuItem, CollapsibleNav } from 'react-bootstrap'
+var Router = require('react-router').Router;
+var Route = require('react-router').Route;
+var Link = require('react-router').Link;
+var $ = require('jquery');
+var playerRepository = require('./playerRepository');
+import createHashHistory from 'history/lib/createHashHistory'
+import { Navbar, NavBrand, Nav, NavItem, NavDropdown, MenuItem, CollapsibleNav, Button, Glyphicon } from 'react-bootstrap'
 
-var playerList = [
-    {
-        name: "Adrian Peterson",
-        position: "RB",
-        id: "ADRP"
-    },
-    {
-        name: "Marshawn Lynch",
-        position: "RB",
-        id: "MRSH"
-    },
-    {
-        name: "Jamaal Charles",
-        position: "RB",
-        id: "JMCH"
-    },
-    {
-        name: "Aaron Rodgers",
-        position: "QB",
-        id: "AARN"
-    },
-    {
-        name: "Andrew Luck",
-        position: "QB",
-        id: "ALUC"
-    },
-    {
-        name: "Calvin Johnson",
-        position: "WR",
-        id: "CALJ"
-    },
-    {
-        name: "Antonio Brown",
-        position: "WR",
-        id: "ANTO"
-    }];
 
-    function getPlayerById(id){
-        return playerList.filter(function(player){return player.id === id})[0];
-    };
+// var playerList = [
+//     {
+//         name: "Adrian Peterson",
+//         position: "RB",
+//         id: "ADRP",
+//         rushattempts: 234,
+//         rushyards: 1234,
+//         rushtd: 10,
+//         receptions: 24,
+//         receptionyards: 234,
+//         receptiontds: 12
+//     },
+//     {
+//         name: "Marshawn Lynch",
+//         position: "RB",
+//         id: "MRSH",
+//         rushattempts: 234,
+//         rushyards: 1234,
+//         rushtd: 10,
+//         receptions: 24,
+//         receptionyards: 234,
+//         receptiontds: 12
+//     },
+//     {
+//         name: "Jamaal Charles",
+//         position: "RB",
+//         id: "JMCH",
+//         rushattempts: 234,
+//         rushyards: 1234,
+//         rushtd: 10,
+//         receptions: 24,
+//         receptiontds: 12
+//     },
+//     {
+//         name: "Aaron Rodgers",
+//         position: "QB",
+//         id: "AARN",
+//         rushattempts: 234,
+//         rushyards: 1234,
+//         rushtd: 10,
+//         passattempts: 224,
+//         passyards: 5234,
+//         passtd: 43,
+//         passinterceptions: 12
+//     },
+//     {
+//         name: "Andrew Luck",
+//         position: "QB",
+//         id: "ALUC",
+//         rushattempts: 234,
+//         rushyards: 1234,
+//         rushtd: 10,
+//         passattempts: 224,
+//         passyards: 5234,
+//         passtd: 43,
+//         passinterceptions: 12
+//     },
+//     {
+//         name: "Calvin Johnson",
+//         position: "WR",
+//         id: "CALJ",
+//         rushattempts: 3,
+//         rushyards: 34,
+//         rushtd: 10,
+//         receptions: 124,
+//         receptionyards: 1234,
+//         receptiontds: 12
+//     },
+//     {
+//         name: "Antonio Brown",
+//         position: "WR",
+//         id: "ANTO",
+//         rushattempts: 3,
+//         rushyards: 34,
+//         rushtd: 10,
+//         receptions: 124,
+//         receptionyards: 1234,
+//         receptiontds: 12
+//     },
+//     {
+//         name: "John Brown",
+//         position: "WR",
+//         id: "JBROW",
+//         rushattempts: 4,
+//         rushyards: 14,
+//         rushtd: 10,
+//         receptions: 124,
+//         receptionyards: 1234,
+//         receptiontds: 12
+//     },
+//     {
+//         name: "Jim Brown",
+//         position: "RB",
+//         id: "BROW",
+//         rushattempts: 234,
+//         rushyards: 1234,
+//         rushtd: 10,
+//         receptions: 24,
+//         receptionyards: 234,
+//         receptiontds: 12
+//     },
+//     {
+//         name: "Phil Mickelson",
+//         position: "WR",
+//         id: "DFSA",
+//         rushattempts: 4,
+//         rushyards: 14,
+//         rushtd: 10,
+//         receptions: 124,
+//         receptionyards: 1234,
+//         receptiontds: 12
+//     }];
 
     var Player = React.createClass({
         render: function(){
-            return <div className="panel panel-default">
-                    <div className="panel-heading" role="tab" id="headingOne">
-                      <h4 className="panel-title">
-                          <Link to={`/player/${this.props.player.id}`}>{this.props.player.name}</Link>
-                      </h4>
-                    </div>
-                    </div>;
+            return  <tr>
+                        <td>
+                            <Link to={`/player/${this.props.player.id}`}>{this.props.player.name}<span className="glyphicon glyphicon-chevron-right pull-right"></span></Link>
+                        </td> 
+                    </tr>;
         }
     });
 
     var PlayerPage = React.createClass({
         getInitialState: function(){
-            return {player: getPlayerById(this.props.params.id)};
+            return {player: playerRepository.getPlayerById(this.props.params.id)};
         },
         render: function(){
-            return <div className="row">
-                <h1>{this.state.player.name}</h1>
-                <h3>{this.state.player.position}</h3>
-            </div>
+            return <div>
+                        <NavBar />
+                        <div className="container-fluid">
+                            <div className="row">
+                                <h1>{this.state.player.name}</h1>
+                                <h3>{this.state.player.position}</h3>
+                            </div>
+                            <div className="row form-group">
+                                <label>Rush Attempts</label>
+                                <input type="text" className="form-control" value={this.state.player.rushattempts} />
+                                <label>Rush Yards</label>
+                                <input type="text" className="form-control" value={this.state.player.rushyards} />
+                                <label>Rush Touchdowns</label>
+                                <input type="text" className="form-control" value={this.state.player.rushtd} />
+                                <label>Receptions</label>
+                                <input type="text" className="form-control" value={this.state.player.receptions} />
+                                <label>Receiving Yards</label>
+                                <input type="text" className="form-control" value={this.state.player.receptionyards} />
+                                <label>Receiving Touchdowns</label>
+                                <input type="text" className="form-control" value={this.state.player.receptiontds} />
+                            </div>
+                        </div>
+                        <Navbar fixedBottm inverse toggleNavKey={0}>
+                        <NavBrand><Glyphicon glyph="chevron-left" onClick={this.goBack}/>
+                        </NavBrand>
+                        <CollapsibleNav eventKey={0}> {/* This is the eventKey referenced */}
+                          <Nav navbar right>
+                            <NavItem eventKey={1} href="#">Link Right</NavItem>
+                            <NavItem eventKey={2} href="#">Link Right</NavItem>
+                          </Nav>
+                        </CollapsibleNav>
+                    </Navbar>
+                    </div>;
         }
     });
 
@@ -79,36 +181,45 @@ var playerList = [
             this.props.updateFilterFromSearch(this.refs.filterSearch.value);
         },
         render: function(){
-            var players = this.props.players.map(function(player){return <Player player={player} />;});
-            return <div className="row">
-                    <div className="col-sm-3">
-                        <h2>Players</h2>
-                    </div>
-                    <div className="col-sm-4">
-                        <input type="text" className="form-control" placeholder="Search by name" ref="filterSearch" onChange={this.searchTextUpdated} />
-                    </div>
-                    <div className="col-sm-4">
-                        <select className="form-control"  ref="filterPosition" onChange={this.filterPositionUpdated}>
-                            <option value="">All</option>
-                            <option value="QB">Quarterback</option>
-                            <option value="RB">Runningback</option>
-                            <option value="WR">Wide Reciever</option>
-                            <option value="TE">Tight End</option>
-                        </select>
-                    </div>
-                    <div className="panel-group col-sm-12" id="accordion" role="tablist" aria-multiselectable="true">
-                    {players}
-                    </div>
+            var players = this.props.players.map(function(player){return <Player key={player.id} player={player} />;});
+            return  <div className="container-fluid">
+                        <div className="row">
+                            <div className="col-sm-6">
+                                <input type="text" className="form-control" placeholder="Search by name" ref="filterSearch" onChange={this.searchTextUpdated} />
+                            </div>
+                            <div className="col-sm-6">
+                                <select className="form-control"  ref="filterPosition" onChange={this.filterPositionUpdated}>
+                                    <option value="">All</option>
+                                    <option value="QB">Quarterback</option>
+                                    <option value="RB">Runningback</option>
+                                    <option value="WR">Wide Reciever</option>
+                                    <option value="TE">Tight End</option>
+                                    <option value="K">Kicker</option>
+                                    <option value="DST">Defense/Special Teams</option>
+                                </select>
+                            </div>
+                            <div className="col-sm-12">
+                                <table className="table table-striped table-condensed" >
+                                    <tbody>
+                                    {players}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>;
         }
     });
 
     var NavBar = React.createClass({
+        goBack: function(e){
+            history.back();
+        },
         render: function(){
             return (
-                    <Navbar toggleNavKey={0}>
-                        <NavBrand>professorStats</NavBrand>
-                        <CollapsibleNav eventKey={0}> {/* This is the eventKey referenced */}
+                    <Navbar fixedTop inverse toggleNavKey={0}>
+                        <NavBrand><Glyphicon glyph="chevron-left" onClick={this.goBack}/>
+                        </NavBrand>
+                        <CollapsibleNav eventKey={0}>
                           <Nav navbar right>
                             <NavItem eventKey={1} href="#">Link Right</NavItem>
                             <NavItem eventKey={2} href="#">Link Right</NavItem>
@@ -120,10 +231,22 @@ var playerList = [
     });
 
     var Main = React.createClass({
+        componentDidMount: function(){
+            var component = this;
+            playerRepository.getPlayers().then(function(players){
+                if(component.isMounted()){
+                    component.setState({
+                        originalPlayerList: players,
+                        players: players,
+                    });
+                }
+            });
+        },
         getInitialState: function(){
+
             return{
-                originalPlayerList: playerList,
-                players: playerList
+                originalPlayerList: [],
+                players: []
             };
         },
         updateFilterFromSearch: function(value){
@@ -145,13 +268,28 @@ var playerList = [
             );
         },
         render: function() {
-            return (<div className="container-fluid">
+            return (<div>
                         <NavBar />
                         <PlayerList players={this.state.players} updateFilterFromSearch={this.updateFilterFromSearch} filterPositionUpdated={this.filterPositionUpdated} />
                     </div>);
         }
     });
      
+
+    var SplashScreen = React.createClass({
+        mixins: [Router.Navigation],
+        getInitialState: function(){
+            return {title: "<professor-Stats />"}
+        },
+        componentDidMount: function(){
+            var component = this;
+            setTimeout(function(){component.props.history.pushState(null, '/Main');},2000);
+
+        },
+        render: function(){
+            return <div className="container-fluid">{this.state.title}</div>
+        }
+    });
 
     var app = {
         // Application Constructor
@@ -181,8 +319,9 @@ var playerList = [
 
     app.initialize();
 
-    ReactDOM.render((<Router history={BrowserHistory}>
-                        <Route path="/" component={Main} />
+    ReactDOM.render((<Router history={createHashHistory()}>
+                        <Route path="/" component={SplashScreen} />
+                        <Route path="/Main" component={Main} />
                         <Route path="/player/:id" component={PlayerPage}/>
                     </Router>)
         , document.getElementById('root'))

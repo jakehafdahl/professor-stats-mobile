@@ -1,5 +1,11 @@
 'use strict';
 
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+
+var _historyLibCreateHashHistory = require('history/lib/createHashHistory');
+
+var _historyLibCreateHashHistory2 = _interopRequireDefault(_historyLibCreateHashHistory);
+
 var _reactBootstrap = require('react-bootstrap');
 
 var React = require('react');
@@ -7,76 +13,48 @@ var ReactDOM = require('react-dom');
 var Router = require('react-router').Router;
 var Route = require('react-router').Route;
 var Link = require('react-router').Link;
-var BrowserHistory = require('react-router').BrowserHistory;
-
-var playerList = [{
-    name: "Adrian Peterson",
-    position: "RB",
-    id: "ADRP"
-}, {
-    name: "Marshawn Lynch",
-    position: "RB",
-    id: "MRSH"
-}, {
-    name: "Jamaal Charles",
-    position: "RB",
-    id: "JMCH"
-}, {
-    name: "Aaron Rodgers",
-    position: "QB",
-    id: "AARN"
-}, {
-    name: "Andrew Luck",
-    position: "QB",
-    id: "ALUC"
-}, {
-    name: "Calvin Johnson",
-    position: "WR",
-    id: "CALJ"
-}, {
-    name: "Antonio Brown",
-    position: "WR",
-    id: "ANTO"
-}, {
-    name: "John Brown",
-    position: "WR",
-    id: "JBROW"
-}, {
-    name: "Jim Brown",
-    position: "RB",
-    id: "BROW"
-}, {
-    name: "Phil Mickelson",
-    position: "WR",
-    id: "DFSA"
-}];
-
-function getPlayerById(id) {
-    return playerList.filter(function (player) {
-        return player.id === id;
-    })[0];
-};
+var $ = require('jquery');
+var playerRepository = require('./playerRepository');
 
 var Player = React.createClass({
     displayName: 'Player',
 
     render: function render() {
         return React.createElement(
-            Link,
-            { to: '/player/' + this.props.player.id },
+            'tr',
+            null,
             React.createElement(
-                'div',
-                { className: 'panel panel-default' },
+                'td',
+                null,
                 React.createElement(
-                    'div',
-                    { className: 'panel-heading', role: 'tab', id: 'headingOne' },
-                    React.createElement(
-                        'h4',
-                        { className: 'panel-title' },
-                        this.props.player.name
-                    )
+                    Link,
+                    { to: '/player/' + this.props.player.id },
+                    this.props.player.name,
+                    React.createElement('span', { className: 'glyphicon glyphicon-chevron-right pull-right' })
                 )
             )
+        );
+    }
+});
+
+var StatEntry = React.createClass({
+    displayName: 'StatEntry',
+
+    updateField: function updateField() {
+        var value = this.refs[this.props.field].value;
+        value = isNaN(value) ? 0 : parseInt(value);
+        this.props.handleChange(this.props.field, value);
+    },
+    render: function render() {
+        return React.createElement(
+            'div',
+            { className: 'form-group' },
+            React.createElement(
+                'label',
+                null,
+                this.props.field
+            ),
+            React.createElement('input', { type: 'text', className: 'form-control', ref: this.props.field, value: this.props.player[this.props.field], onChange: this.updateField })
         );
     }
 });
@@ -85,9 +63,27 @@ var PlayerPage = React.createClass({
     displayName: 'PlayerPage',
 
     getInitialState: function getInitialState() {
-        return { player: getPlayerById(this.props.params.id) };
+        return { player: playerRepository.getPlayerById(this.props.params.id) };
+    },
+    handleChange: function handleChange(field, value) {
+        this.state.player[field] = value;
+
+        this.setState({ player: this.state.player });
+    },
+    handleSave: function handleSave() {
+        var component = this;
+        // call to playerRepo to save updates and transition to PlayerList
+        playerRepository.updatePlayer(this.state.player).then(function () {
+            component.props.history.pushState(null, '/Players');
+        });
     },
     render: function render() {
+        var fields = [];
+        for (var field in this.state.player) {
+            if (["name", "position", "team", "id"].indexOf(field) === -1) {
+                fields.push(React.createElement(StatEntry, { field: field, player: this.state.player, handleChange: this.handleChange }));
+            }
+        }
         return React.createElement(
             'div',
             null,
@@ -107,6 +103,24 @@ var PlayerPage = React.createClass({
                         'h3',
                         null,
                         this.state.player.position
+                    )
+                ),
+                React.createElement(
+                    'div',
+                    { className: 'row' },
+                    fields
+                ),
+                React.createElement(
+                    'footer',
+                    null,
+                    React.createElement(
+                        'div',
+                        { className: 'container' },
+                        React.createElement(
+                            _reactBootstrap.Button,
+                            { onClick: this.handleSave },
+                            'Save'
+                        )
                     )
                 )
             )
@@ -129,49 +143,71 @@ var PlayerList = React.createClass({
         });
         return React.createElement(
             'div',
-            { className: 'row' },
+            { className: 'container-fluid' },
             React.createElement(
                 'div',
-                { className: 'col-sm-6' },
-                React.createElement('input', { type: 'text', className: 'form-control', placeholder: 'Search by name', ref: 'filterSearch', onChange: this.searchTextUpdated })
-            ),
-            React.createElement(
-                'div',
-                { className: 'col-sm-6' },
+                { className: 'row' },
                 React.createElement(
-                    'select',
-                    { className: 'form-control', ref: 'filterPosition', onChange: this.filterPositionUpdated },
+                    'div',
+                    { className: 'col-sm-6' },
+                    React.createElement('input', { type: 'text', className: 'form-control', placeholder: 'Search by name', ref: 'filterSearch', onChange: this.searchTextUpdated })
+                ),
+                React.createElement(
+                    'div',
+                    { className: 'col-sm-6' },
                     React.createElement(
-                        'option',
-                        { value: '' },
-                        'All'
-                    ),
+                        'select',
+                        { className: 'form-control', ref: 'filterPosition', onChange: this.filterPositionUpdated },
+                        React.createElement(
+                            'option',
+                            { value: '' },
+                            'All'
+                        ),
+                        React.createElement(
+                            'option',
+                            { value: 'QB' },
+                            'Quarterback'
+                        ),
+                        React.createElement(
+                            'option',
+                            { value: 'RB' },
+                            'Runningback'
+                        ),
+                        React.createElement(
+                            'option',
+                            { value: 'WR' },
+                            'Wide Reciever'
+                        ),
+                        React.createElement(
+                            'option',
+                            { value: 'TE' },
+                            'Tight End'
+                        ),
+                        React.createElement(
+                            'option',
+                            { value: 'K' },
+                            'Kicker'
+                        ),
+                        React.createElement(
+                            'option',
+                            { value: 'DST' },
+                            'Defense/Special Teams'
+                        )
+                    )
+                ),
+                React.createElement(
+                    'div',
+                    { className: 'col-sm-12' },
                     React.createElement(
-                        'option',
-                        { value: 'QB' },
-                        'Quarterback'
-                    ),
-                    React.createElement(
-                        'option',
-                        { value: 'RB' },
-                        'Runningback'
-                    ),
-                    React.createElement(
-                        'option',
-                        { value: 'WR' },
-                        'Wide Reciever'
-                    ),
-                    React.createElement(
-                        'option',
-                        { value: 'TE' },
-                        'Tight End'
+                        'table',
+                        { className: 'table table-striped table-condensed' },
+                        React.createElement(
+                            'tbody',
+                            null,
+                            players
+                        )
                     )
                 )
-            ),
-            React.createElement(
-                'div',
-                { className: 'panel-group col-sm-12', id: 'accordion', role: 'tablist', 'aria-multiselectable': 'true' },
-                players
             )
         );
     }
@@ -180,18 +216,8 @@ var PlayerList = React.createClass({
 var NavBar = React.createClass({
     displayName: 'NavBar',
 
-    mixins: [BrowserHistory],
     goBack: function goBack(e) {
-        if (Router.History.length > 1) {
-            // this will take you back if there is history
-            Router.History.back();
-        } else {
-            // this will take you to the parent route if there is no history,
-            // but unfortunately also add it as a new route
-            var currentRoutes = this.context.router.getCurrentRoutes();
-            var routeName = currentRoutes[currentRoutes.length - 2].name;
-            this.context.router.transitionTo(routeName);
-        }
+        history.back();
     },
     render: function render() {
         return React.createElement(
@@ -205,7 +231,6 @@ var NavBar = React.createClass({
             React.createElement(
                 _reactBootstrap.CollapsibleNav,
                 { eventKey: 0 },
-                ' ',
                 React.createElement(
                     _reactBootstrap.Nav,
                     { navbar: true, right: true },
@@ -228,10 +253,22 @@ var NavBar = React.createClass({
 var Main = React.createClass({
     displayName: 'Main',
 
+    componentDidMount: function componentDidMount() {
+        var component = this;
+        playerRepository.getPlayers().then(function (players) {
+            if (component.isMounted()) {
+                component.setState({
+                    originalPlayerList: players,
+                    players: players
+                });
+            }
+        });
+    },
     getInitialState: function getInitialState() {
+
         return {
-            originalPlayerList: playerList,
-            players: playerList
+            originalPlayerList: [],
+            players: []
         };
     },
     updateFilterFromSearch: function updateFilterFromSearch(value) {
@@ -258,6 +295,50 @@ var Main = React.createClass({
             null,
             React.createElement(NavBar, null),
             React.createElement(PlayerList, { players: this.state.players, updateFilterFromSearch: this.updateFilterFromSearch, filterPositionUpdated: this.filterPositionUpdated })
+        );
+    }
+});
+
+var SplashScreen = React.createClass({
+    displayName: 'SplashScreen',
+
+    mixins: [Router.Navigation],
+    getInitialState: function getInitialState() {
+        return { title: "<professor-Stats />" };
+    },
+    componentDidMount: function componentDidMount() {
+        var component = this;
+        setTimeout(function () {
+            component.props.history.pushState(null, '/Main');
+        }, 2000);
+    },
+    render: function render() {
+        return React.createElement(
+            'div',
+            { className: 'container-fluid' },
+            this.state.title
+        );
+    }
+});
+
+var HomeScreen = React.createClass({
+    displayName: 'HomeScreen',
+
+    render: function render() {
+        return React.createElement(
+            'div',
+            { className: 'container-fluid' },
+            React.createElement(
+                'h1',
+                null,
+                'Home screen'
+            ),
+            React.createElement(
+                Link,
+                { className: 'btn btn-primary', to: '/Players' },
+                'Edit Players',
+                React.createElement('span', { className: 'glyphicon glyphicon-chevron-right pull-right' })
+            )
         );
     }
 });
@@ -292,8 +373,9 @@ app.initialize();
 
 ReactDOM.render(React.createElement(
     Router,
-    { history: BrowserHistory },
-    React.createElement(Route, { path: '/', component: Main }),
+    { history: (0, _historyLibCreateHashHistory2['default'])() },
+    React.createElement(Route, { path: '/', component: SplashScreen }),
+    React.createElement(Route, { path: '/Main', component: HomeScreen }),
+    React.createElement(Route, { path: '/Players', component: Main }),
     React.createElement(Route, { path: '/player/:id', component: PlayerPage })
 ), document.getElementById('root'));
-/* This is the eventKey referenced */

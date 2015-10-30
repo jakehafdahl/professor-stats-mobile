@@ -1,85 +1,59 @@
 var React = require('react');
 var ReactDOM = require('react-dom');
-var Router = require('react-router').Router
-var Route = require('react-router').Route
-var Link = require('react-router').Link
-var BrowserHistory = require('react-router').BrowserHistory;
+var Router = require('react-router').Router;
+var Route = require('react-router').Route;
+var Link = require('react-router').Link;
+var $ = require('jquery');
+var playerRepository = require('./playerRepository');
+import createHashHistory from 'history/lib/createHashHistory'
 import { Navbar, NavBrand, Nav, NavItem, NavDropdown, MenuItem, CollapsibleNav, Button, Glyphicon } from 'react-bootstrap'
-
-var playerList = [
-    {
-        name: "Adrian Peterson",
-        position: "RB",
-        id: "ADRP"
-    },
-    {
-        name: "Marshawn Lynch",
-        position: "RB",
-        id: "MRSH"
-    },
-    {
-        name: "Jamaal Charles",
-        position: "RB",
-        id: "JMCH"
-    },
-    {
-        name: "Aaron Rodgers",
-        position: "QB",
-        id: "AARN"
-    },
-    {
-        name: "Andrew Luck",
-        position: "QB",
-        id: "ALUC"
-    },
-    {
-        name: "Calvin Johnson",
-        position: "WR",
-        id: "CALJ"
-    },
-    {
-        name: "Antonio Brown",
-        position: "WR",
-        id: "ANTO"
-    },
-    {
-        name: "John Brown",
-        position: "WR",
-        id: "JBROW"
-    },
-    {
-        name: "Jim Brown",
-        position: "RB",
-        id: "BROW"
-    },
-    {
-        name: "Phil Mickelson",
-        position: "WR",
-        id: "DFSA"
-    }];
-
-    function getPlayerById(id){
-        return playerList.filter(function(player){return player.id === id})[0];
-    };
 
     var Player = React.createClass({
         render: function(){
-            return <Link to={`/player/${this.props.player.id}`}><div className="panel panel-default">
-                    <div className="panel-heading" role="tab" id="headingOne">
-                      <h4 className="panel-title">
-                          {this.props.player.name}
-                      </h4>
-                    </div>
-                    </div>
-                    </Link>;
+            return  <tr>
+                        <td>
+                            <Link to={`/player/${this.props.player.id}`}>{this.props.player.name}<span className="glyphicon glyphicon-chevron-right pull-right"></span></Link>
+                        </td> 
+                    </tr>;
+        }
+    });
+
+    var StatEntry = React.createClass({
+        updateField: function(){
+            var value = this.refs[this.props.field].value;
+            value = isNaN(value) ? 0 : parseInt(value);
+            this.props.handleChange(this.props.field, value);
+        },
+        render: function(){
+            return <div className="form-group">
+                     <label>{this.props.field}</label>
+                    <input type="text" className="form-control" ref={this.props.field} value={this.props.player[this.props.field]} onChange={this.updateField} /></div>;
         }
     });
 
     var PlayerPage = React.createClass({
         getInitialState: function(){
-            return {player: getPlayerById(this.props.params.id)};
+            return {player: playerRepository.getPlayerById(this.props.params.id)};
+        },
+        handleChange: function(field, value){
+            this.state.player[field] = value;
+
+            this.setState({player: this.state.player});
+        },
+        handleSave: function(){
+            var component = this;
+            // call to playerRepo to save updates and transition to PlayerList
+            playerRepository.updatePlayer(this.state.player).then(function(){
+                component.props.history.pushState(null, '/Players');
+            })
         },
         render: function(){
+            var fields = [];
+            for(var field in this.state.player){
+                if(["name", "position", "team", "id"].indexOf(field) === -1){
+                    fields.push(<StatEntry field={field} player={this.state.player} handleChange={this.handleChange} />);
+                }
+            }
             return <div>
                         <NavBar />
                         <div className="container-fluid">
@@ -87,6 +61,14 @@ var playerList = [
                                 <h1>{this.state.player.name}</h1>
                                 <h3>{this.state.player.position}</h3>
                             </div>
+                            <div className="row">
+                                {fields}
+                            </div>
+                            <footer>
+                                <div className="container">
+                                    <Button onClick={this.handleSave} >Save</Button>
+                                </div>
+                            </footer>
                         </div>
                     </div>;
         }
@@ -101,7 +83,8 @@ var playerList = [
         },
         render: function(){
             var players = this.props.players.map(function(player){return <Player key={player.id} player={player} />;});
-            return      <div className="row">
+            return  <div className="container-fluid">
+                        <div className="row">
                             <div className="col-sm-6">
                                 <input type="text" className="form-control" placeholder="Search by name" ref="filterSearch" onChange={this.searchTextUpdated} />
                             </div>
@@ -112,26 +95,32 @@ var playerList = [
                                     <option value="RB">Runningback</option>
                                     <option value="WR">Wide Reciever</option>
                                     <option value="TE">Tight End</option>
+                                    <option value="K">Kicker</option>
+                                    <option value="DST">Defense/Special Teams</option>
                                 </select>
                             </div>
-                            <div className="panel-group col-sm-12" id="accordion" role="tablist" aria-multiselectable="true">
-                            {players}
+                            <div className="col-sm-12">
+                                <table className="table table-striped table-condensed" >
+                                    <tbody>
+                                    {players}
+                                    </tbody>
+                                </table>
                             </div>
-                        </div>;
+                        </div>
+                    </div>;
         }
     });
 
     var NavBar = React.createClass({
-        mixins: [BrowserHistory],
         goBack: function(e){
-            // how do you do this generically?
+            history.back();
         },
         render: function(){
             return (
                     <Navbar fixedTop inverse toggleNavKey={0}>
                         <NavBrand><Glyphicon glyph="chevron-left" onClick={this.goBack}/>
                         </NavBrand>
-                        <CollapsibleNav eventKey={0}> {/* This is the eventKey referenced */}
+                        <CollapsibleNav eventKey={0}>
                           <Nav navbar right>
                             <NavItem eventKey={1} href="#">Link Right</NavItem>
                             <NavItem eventKey={2} href="#">Link Right</NavItem>
@@ -143,10 +132,22 @@ var playerList = [
     });
 
     var Main = React.createClass({
+        componentDidMount: function(){
+            var component = this;
+            playerRepository.getPlayers().then(function(players){
+                if(component.isMounted()){
+                    component.setState({
+                        originalPlayerList: players,
+                        players: players,
+                    });
+                }
+            });
+        },
         getInitialState: function(){
+
             return{
-                originalPlayerList: playerList,
-                players: playerList
+                originalPlayerList: [],
+                players: []
             };
         },
         updateFilterFromSearch: function(value){
@@ -176,6 +177,30 @@ var playerList = [
     });
      
 
+    var SplashScreen = React.createClass({
+        mixins: [Router.Navigation],
+        getInitialState: function(){
+            return {title: "<professor-Stats />"}
+        },
+        componentDidMount: function(){
+            var component = this;
+            setTimeout(function(){component.props.history.pushState(null, '/Main');},2000);
+
+        },
+        render: function(){
+            return <div className="container-fluid">{this.state.title}</div>
+        }
+    });
+
+    var HomeScreen = React.createClass({
+        render: function(){
+            return <div className="container-fluid">
+                        <h1>Home screen</h1>
+                        <Link className="btn btn-primary" to='/Players'>Edit Players<span className="glyphicon glyphicon-chevron-right pull-right"></span></Link>
+                    </div>;
+        }
+    });
+
     var app = {
         // Application Constructor
         initialize: function() {
@@ -204,8 +229,10 @@ var playerList = [
 
     app.initialize();
 
-    ReactDOM.render((<Router history={BrowserHistory}>
-                        <Route path="/" component={Main} />
+    ReactDOM.render((<Router history={createHashHistory()}>
+                        <Route path="/" component={SplashScreen} />
+                        <Route path="/Main" component={HomeScreen} />
+                        <Route path="/Players" component={Main} />
                         <Route path="/player/:id" component={PlayerPage}/>
                     </Router>)
         , document.getElementById('root'))
